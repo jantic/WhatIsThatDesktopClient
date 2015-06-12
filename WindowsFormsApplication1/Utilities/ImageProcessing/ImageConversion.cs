@@ -30,6 +30,21 @@ namespace WhatIsThat.Utilities.ImageProcessing
             }
         }
 
+        public static byte[] ImageToJpegByteArray(Bitmap image)
+        {
+            using (var ms = new MemoryStream())
+            {
+                // Convert Image to byte[]
+                const String codecName = "image/jpeg";
+                var imageCodecInfo = GetImageCodeInfo(codecName);
+                var encoder = Encoder.Quality;
+                var encoderParameters = new EncoderParameters(1);
+                encoderParameters.Param[0] = new EncoderParameter(encoder, 100L);
+                image.Save(ms, imageCodecInfo, encoderParameters);
+                return ms.ToArray();
+            }
+        }
+
         public static String ByteArrayToBase64String(byte[] imageBytes)
         {
             return Convert.ToBase64String(imageBytes);

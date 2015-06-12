@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using RestSharp;
+using RestSharp.Authenticators;
 using RestSharp.Serializers;
 using WhatIsThat.Utilities.ImageProcessing;
 using WhatIsThat.WhatIsThatServiceClient.Exceptions;
@@ -20,6 +21,7 @@ namespace WhatIsThat.WhatIsThatServiceClient
     public class WhatIsThatClient
     {
         private readonly string _baseUrl = ConfigurationManager.AppSettings["whatisthat_baseurl"];
+        private readonly string _appKey = ConfigurationManager.AppSettings["whatisthat_appkey"];
         private const String ImageIdPath ="/api/IdentifySpecies/";
         private const String ApiInfoPath = "/api/ApiInfo/";
         private const Double MinImageSizeMultiplier = 0.10;
@@ -37,7 +39,7 @@ namespace WhatIsThat.WhatIsThatServiceClient
             ValidateCropArea(cropArea);
             var croppedImage = ImageConversion.GetImageCrop(formattedSourceImage, cropArea);
             var resizedImage = ResizeImageIfNeeded(croppedImage);
-            var imagePngByteArray = ImageConversion.ImageToPngByteArray(resizedImage);
+            var imageByteArray = ImageConversion.ImageToJpegByteArray(resizedImage);
 
             var parameters = new List<Parameter>();
             var latitudeParam = new Parameter
@@ -61,7 +63,7 @@ namespace WhatIsThat.WhatIsThatServiceClient
             };
             parameters.Add(multisampleParam);
 
-            var result = ExecutePostRequest<WhatIsThatResponseDto>(ImageIdPath, parameters, imagePngByteArray);
+            var result = ExecutePostRequest<WhatIsThatResponseDto>(ImageIdPath, parameters, imageByteArray);
             return new WhatIsThatSpeciesCandidatesCollection(result.SpeciesCandidates);
         }
 
@@ -186,7 +188,7 @@ namespace WhatIsThat.WhatIsThatServiceClient
 
         private RestClient BuildRestClient()
         {
-            var client = new RestClient { BaseUrl = new Uri(_baseUrl) };
+            var client = new RestClient { BaseUrl = new Uri(_baseUrl), Authenticator = new HttpBasicAuthenticator("", _appKey)};
             return client;
         }
 
